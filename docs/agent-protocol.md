@@ -59,15 +59,49 @@ When an agent is dispatched, it receives:
    - Escalation instructions (Telegram thread)
 ```
 
+## Alignment checkpoint
+
+**Before any implementation, the agent and human must align.** This is the most important step in the protocol. Building the wrong thing fast is the most expensive mistake.
+
+After reading the feature file and project context, the agent must:
+
+1. **Restate the goal** in its own words — prove understanding
+2. **Surface ambiguities** — anything unclear, underspecified, or contradictory
+3. **Propose approach** — "here's how I'd build this, here's what I'd touch"
+4. **Ask for confirmation** — "is my understanding correct? anything I'm missing?"
+5. **Wait for human approval** before writing code
+
+This applies even after plan mode. The checkpoint catches:
+- Misunderstood requirements (feature file was vague)
+- Wrong repo / wrong branch assumptions
+- Scope disagreements (agent thinks X is in scope, human doesn't)
+- Architecture choices the human wouldn't make
+
+**Both sides hold each other accountable:**
+- Agent challenges unclear specs: "The feature says X but the codebase does Y — which do I follow?"
+- Human challenges agent assumptions: "You said you'd refactor the auth module but that's out of scope"
+- Neither side proceeds until alignment is explicit
+
+```
+dispatch → read feature → ALIGNMENT CHECKPOINT → implement → PR
+                              │
+                              ├── agent: "here's my understanding + plan"
+                              ├── human: "correct" / "no, here's what I mean"
+                              └── repeat until both sides agree
+```
+
+**Cost of skipping:** an Opus agent building the wrong thing for 2 hours = $30 wasted + revert + redo. The checkpoint costs ~$0.50 of tokens and 5 minutes.
+
 ## Agent behavior rules
 
 ### Working
 
 1. **Read the feature file first.** Understand What, Why, Scope, and Acceptance criteria before writing code.
-2. **Stay in scope.** Do not add features, refactor code, or make improvements beyond what the feature file describes.
-3. **Create the branch.** `feat/<idea>/<feature>` — always branch from the base branch.
-4. **Commit incrementally.** Small, atomic commits with descriptive messages.
-5. **Open a PR when done.** Include a summary referencing the feature file. Tag the human for review.
+2. **Run the alignment checkpoint.** Do not skip this. See above.
+3. **Stay in scope.** Do not add features, refactor code, or make improvements beyond what the feature file describes.
+4. **Create the branch.** `feat/<idea>/<feature>` — always branch from the base branch.
+5. **Commit incrementally.** Small, atomic commits with descriptive messages.
+6. **Open a PR when done.** Include a summary referencing the feature file. Tag the human for review.
 
 ### Blocked
 
